@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YML Land Tax Dispute Application</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+    :root {
+      --navy: #0d1b2a;
+      --navy-mid: #1a2f45;
+      --gold: #c9a84c;
+      --gold-light: #e8c878;
+      --cream: #faf8f3;
+      --white: #ffffff;
+      --muted: #8a9bb0;
+      --success: #2a9d5c;
+      --warn: #e8904a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { font-family: 'DM Sans', sans-serif; background: var(--navy); min-height: 100vh; color: var(--cream); overflow-x: hidden; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background: radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.07) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 80%, rgba(201,168,76,0.05) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .page { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* ── SETUP BANNER ── */
+    .setup-banner {
+      background: #0f1e30;
+      border-bottom: 1px solid rgba(232,144,74,0.5);
+      padding: 10px 20px;
+      display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
+      font-family: 'DM Mono', monospace; font-size: 11px; color: var(--warn); text-align: center;
+    }
+    .setup-banner a { color: var(--gold); text-decoration: underline; }
+    .setup-banner code { background: rgba(255,255,255,0.1); padding: 2px 7px; border-radius: 4px; color: #fff; font-size: 11px; }
+    .setup-banner button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 15px; margin-left: 6px; padding: 0 4px; line-height: 1; }
+
+    /* ── HEADER ── */
+    header {
+      padding: 26px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+      background: rgba(13,27,42,0.85); backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .logo { display: flex; align-items: center; gap: 14px; }
+    .logo-badge {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-family: 'Playfair Display', serif; font-weight: 700; font-size: 17px;
+      color: var(--navy); flex-shrink: 0;
+    }
+    .logo-name { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: var(--white); line-height: 1.1; }
+    .logo-sub { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; }
+    .header-ref { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-align: right; line-height: 1.6; }
+    .header-ref span { color: var(--gold); }
+
+    /* ── MAIN ── */
+    main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 52px 20px 80px; }
+
+    .hero { text-align: center; max-width: 600px; margin-bottom: 44px; animation: fadeUp 0.7s ease both; }
+    .hero-eyebrow { font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 3px; color: var(--gold); margin-bottom: 16px; }
+    .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 48px); font-weight: 700; line-height: 1.15; color: var(--white); margin-bottom: 14px; }
+    .hero h1 em { font-style: italic; color: var(--gold); }
+    .hero p { font-size: 15px; font-weight: 300; color: var(--muted); line-height: 1.7; max-width: 440px; margin: 0 auto; }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--navy-mid); border: 1px solid rgba(201,168,76,0.18);
+      border-radius: 20px; padding: 44px; width: 100%; max-width: 640px;
+      animation: fadeUp 0.7s 0.15s ease both; position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    /* ── DROPZONE ── */
+    .dropzone {
+      border: 2px dashed rgba(201,168,76,0.35); border-radius: 14px;
+      padding: 44px 28px; text-align: center; cursor: pointer;
+      transition: all 0.25s ease; position: relative; background: rgba(255,255,255,0.02);
+    }
+    .dropzone:hover, .dropzone.drag-over { border-color: var(--gold); background: rgba(201,168,76,0.05); transform: translateY(-2px); }
+    .dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .drop-icon { width: 58px; height: 58px; margin: 0 auto 16px; background: rgba(201,168,76,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.25s; }
+    .dropzone:hover .drop-icon { background: rgba(201,168,76,0.2); transform: scale(1.05); }
+    .drop-icon svg { width: 26px; height: 26px; stroke: var(--gold); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .drop-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; color: var(--white); margin-bottom: 6px; }
+    .drop-sub { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+    .drop-badge { display: inline-block; background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.3); color: var(--gold); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; padding: 4px 12px; border-radius: 20px; }
+
+    /* ── FILE PREVIEW ── */
+    .file-preview { display: none; align-items: center; gap: 13px; background: rgba(201,168,76,0.07); border: 1px solid rgba(201,168,76,0.25); border-radius: 10px; padding: 13px 16px; margin-top: 14px; }
+    .file-preview.visible { display: flex; }
+    .file-icon { width: 36px; height: 36px; background: rgba(201,168,76,0.15); border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .file-icon svg { width: 17px; height: 17px; stroke: var(--gold); fill: none; stroke-width: 1.8; stroke-linecap: round; }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name { font-size: 13px; font-weight: 500; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .remove-btn { background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px; border-radius: 4px; transition: color 0.2s; display: flex; align-items: center; }
+    .remove-btn:hover { color: #e05c5c; }
+    .remove-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+    /* ── DIVIDER ── */
+    .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+    .divider span { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; white-space: nowrap; }
+
+    /* ── FORM FIELDS ── */
+    .form-group { margin-bottom: 15px; }
+    .field-label { display: block; font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); margin-bottom: 8px; }
+    input[type="text"], input[type="email"], textarea {
+      width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 12px 15px; font-family: 'DM Sans', sans-serif;
+      font-size: 14px; color: var(--white); outline: none; transition: border-color 0.2s, background 0.2s;
+    }
+    input:focus, textarea:focus { border-color: rgba(201,168,76,0.5); background: rgba(201,168,76,0.04); }
+    input::placeholder, textarea::placeholder { color: rgba(138,155,176,0.45); }
+    textarea { resize: vertical; min-height: 78px; line-height: 1.6; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+
+    /* ── DISPUTE REASONS ── */
+    .reasons-box {
+      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 18px 20px; margin-bottom: 16px;
+    }
+
+    .reason-item + .reason-item { margin-top: 14px; }
+
+    .reason-label {
+      display: flex; align-items: flex-start; gap: 12px;
+      cursor: pointer; font-size: 14px; color: var(--cream); line-height: 1.5;
+      transition: color 0.15s;
+    }
+    .reason-label:hover { color: var(--white); }
+    .reason-label input[type="checkbox"] { display: none; }
+
+    .cb-box {
+      width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px;
+      border: 2px solid rgba(201,168,76,0.4); border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.18s; background: rgba(255,255,255,0.03);
+    }
+    .cb-box svg { width: 11px; height: 11px; stroke: var(--navy); fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity 0.15s; }
+    .reason-label:has(input:checked) .cb-box { background: var(--gold); border-color: var(--gold); }
+    .reason-label:has(input:checked) .cb-box svg { opacity: 1; }
+
+    /* Sub-constraints */
+    .sub-panel {
+      display: none; margin-top: 12px; margin-left: 32px;
+      background: rgba(201,168,76,0.04); border: 1px solid rgba(201,168,76,0.14);
+      border-radius: 10px; padding: 14px 16px;
+    }
+    .sub-panel.open { display: block; }
+    .sub-panel-title { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+
+    .sub-item + .sub-item { margin-top: 10px; }
+
+    .sub-label {
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer; font-size: 13px; color: var(--muted); transition: color 0.15s;
+    }
+    .sub-label:hover { color: var(--cream); }
+    .sub-label input[type="checkbox"] { display: none; }
+    .sub-cb {
+      width: 17px; height: 17px; flex-shrink: 0;
+      border: 1.5px solid rgba(201,168,76,0.3); border-radius: 4px;
+      display: flex; align-items: center; justify-content: center; transition: all 0.18s;
+    }
+    .sub-cb svg { width: 9px; height: 9px; stroke: var(--navy); fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity 0.15s; }
+    .sub-label:has(input:checked) .sub-cb { background: var(--gold); border-color: var(--gold); }
+    .sub-label:has(input:checked) .sub-cb svg { opacity: 1; }
+    .sub-label:has(input:checked) { color: var(--cream); }
+
+    /* ── SUBMIT ── */
+    .submit-btn {
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      border: none; border-radius: 12px;
+      font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+      color: var(--navy); cursor: pointer; transition: all 0.25s ease; margin-top: 6px;
+    }
+    .submit-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(201,168,76,0.35); }
+    .submit-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .submit-btn .btn-content { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .submit-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+    /* ── SUCCESS ── */
+    .success-panel { display: none; text-align: center; padding: 6px 0; animation: fadeUp 0.5s ease both; }
+    .success-panel.visible { display: block; }
+
+    .success-ring { width: 74px; height: 74px; margin: 0 auto 20px; }
+    .success-ring svg { width: 74px; height: 74px; }
+    .ring-bg { stroke: rgba(42,157,92,0.15); stroke-width: 2; fill: rgba(42,157,92,0.06); }
+    .ring-circle { stroke: var(--success); stroke-width: 2; fill: none; stroke-dasharray: 220; stroke-dashoffset: 220; animation: drawRing 0.6s 0.2s ease forwards; transform-origin: center; transform: rotate(-90deg); }
+    .check-line { stroke: var(--success); stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: drawCheck 0.4s 0.75s ease forwards; }
+
+    .success-title { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: var(--white); margin-bottom: 10px; }
+    .success-msg { font-size: 14px; color: var(--muted); line-height: 1.75; max-width: 420px; margin: 0 auto 22px; }
+    .success-msg strong { color: var(--gold); font-weight: 500; }
+
+    .ref-box {
+      background: rgba(42,157,92,0.07); border: 1px solid rgba(42,157,92,0.25);
+      border-radius: 12px; padding: 15px 20px; margin-bottom: 18px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+    .ref-label { font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 4px; }
+    .ref-number { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; color: var(--success); letter-spacing: 1px; }
+
+    .submitted-reasons {
+      background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.18);
+      border-radius: 10px; padding: 14px 18px; margin-bottom: 18px; text-align: left;
+    }
+    .submitted-reasons .sr-title { font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); margin-bottom: 10px; }
+    .submitted-reasons ul { list-style: none; }
+    .submitted-reasons ul li { font-size: 13px; color: var(--cream); padding: 3px 0 3px 18px; position: relative; line-height: 1.5; }
+    .submitted-reasons ul li::before { content: '→'; position: absolute; left: 0; color: var(--gold); font-size: 11px; }
+    .submitted-reasons ul li.sub-item-entry { color: var(--muted); padding-left: 34px; font-size: 12px; }
+    .submitted-reasons ul li.sub-item-entry::before { content: '·'; left: 20px; }
+
+    .email-status { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 18px; }
+    .email-status.sent { color: var(--success); }
+    .email-status.failed { color: #e05c5c; }
+
+    .status-pills { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+    .status-pill { display: flex; align-items: center; gap: 6px; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2); border-radius: 20px; padding: 6px 13px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gold); }
+    .status-pill .dot { width: 6px; height: 6px; background: var(--gold); border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
+
+    .new-btn { background: none; border: 1px solid rgba(201,168,76,0.35); border-radius: 10px; padding: 11px 26px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--gold); cursor: pointer; transition: all 0.25s ease; }
+    .new-btn:hover { background: rgba(201,168,76,0.08); border-color: var(--gold); }
+
+    /* ── DIRECTOR CONTACT BOX (form) ── */
+    .director-info-note {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 10px; padding: 12px 16px; margin-top: 4px;
+      font-size: 12px; color: var(--muted); line-height: 1.6;
+    }
+    .director-info-note svg { width: 15px; height: 15px; stroke: var(--gold); fill: none; stroke-width: 1.8; stroke-linecap: round; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── DIRECTOR CONTACT BOX (success panel) ── */
+    .director-contact-box {
+      background: rgba(13,27,42,0.6); border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 12px; padding: 18px 20px; margin-bottom: 18px; text-align: left;
+    }
+    .director-contact-box .dc-title {
+      font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--gold); margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .director-contact-box .dc-title svg { width: 13px; height: 13px; stroke: var(--gold); fill: none; stroke-width: 2; stroke-linecap: round; }
+    .dc-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+    .dc-row + .dc-row { border-top: 1px solid rgba(255,255,255,0.06); }
+    .dc-icon { width: 32px; height: 32px; background: rgba(201,168,76,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .dc-icon svg { width: 15px; height: 15px; stroke: var(--gold); fill: none; stroke-width: 1.8; stroke-linecap: round; }
+    .dc-label { font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 2px; }
+    .dc-value { font-size: 14px; color: var(--white); font-weight: 500; word-break: break-all; }
+
+    /* ── SIMPLE MAILTO LINK ── */
+    .simple-mailto { font-size: 13px; color: var(--gold); text-decoration: underline; word-break: break-all; }
+    .simple-mailto:hover { color: var(--gold-light); }
+
+    /* ── FOOTER ── */
+    footer { text-align: center; padding: 22px 48px; border-top: 1px solid rgba(255,255,255,0.06); font-family: 'DM Mono', monospace; font-size: 10px; color: rgba(138,155,176,0.4); letter-spacing: 0.5px; }
+
+    /* ── KEYFRAMES ── */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes drawRing { to { stroke-dashoffset: 0; } }
+    @keyframes drawCheck { to { stroke-dashoffset: 0; } }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 580px) {
+      header { padding: 18px 20px; } .header-ref { display: none; }
+      .card { padding: 24px 18px; } .form-row { grid-template-columns: 1fr; }
+      main { padding: 34px 12px 60px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- SETUP BANNER -->
+  <div class="setup-banner" id="setupBanner">
+    ⚙️ &nbsp;<strong>EmailJS Setup:</strong>&nbsp;
+    Replace <code>YOUR_PUBLIC_KEY</code>, <code>YOUR_SERVICE_ID</code>, <code>YOUR_TEMPLATE_ID</code> in the script.
+    &nbsp;<a href="https://www.emailjs.com/docs/tutorial/overview/" target="_blank" rel="noopener">Setup guide →</a>
+    <button onclick="this.parentElement.remove()" title="Dismiss">✕</button>
+  </div>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-badge">YML</div>
+      <div style="display:flex;flex-direction:column;">
+        <span class="logo-name">YML Legal</span>
+        <span class="logo-sub">Land Tax Disputes</span>
+      </div>
+    </div>
+    <div class="header-ref">
+      <div>Portal Reference <span>LTD-2026</span></div>
+      <div>Secure Submission</div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+    <div class="hero">
+      <div class="hero-eyebrow">Land Tax Dispute</div>
+      <h1>Submit Your <em>Dispute</em><br/>Application</h1>
+      <p>Upload your land tax bill, select your grounds for dispute, and provide your details. Our team will respond within 5 business days.</p>
+    </div>
+
+    <div class="card" id="formCard">
+
+      <!-- Upload -->
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept=".pdf" />
+        <div class="drop-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div class="drop-title">Upload Land Tax Bill</div>
+        <div class="drop-sub">Drag & drop your PDF here, or click to browse</div>
+        <span class="drop-badge">PDF only · file saved to Downloads on select</span>
+      </div>
+
+      <div class="file-preview" id="filePreview">
+        <div class="file-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div class="file-info">
+          <div class="file-name" id="fileName">—</div>
+          <div class="file-meta" id="fileMeta">—</div>
+        </div>
+        <button class="remove-btn" id="removeBtn" title="Remove">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      
+
+      <!-- Divider: Your Details -->
+      <div class="divider" data-s="details"><span>Your Details</span></div>
+
+      <div class="form-row" data-s="details">
+        <div class="form-group">
+          <label class="field-label" for="fullName">Full Name</label>
+          <input type="text" id="fullName" placeholder="Jane Smith" />
+        </div>
+        <div class="form-group">
+          <label class="field-label" for="email">Email Address</label>
+          <input type="email" id="email" placeholder="jane@example.com" />
+        </div>
+      </div>
+
+      <div class="form-row" data-s="details">
+        <div class="form-group">
+          <label class="field-label" for="propAddress">Property Address</label>
+          <input type="text" id="propAddress" placeholder="123 Example St, Sydney NSW" />
+        </div>
+        <div class="form-group">
+          <label class="field-label" for="assessYear">Assessment Year</label>
+          <input type="text" id="assessYear" placeholder="e.g. 2025–2026" />
+        </div>
+      </div>
+
+      <!-- Divider: Client Director -->
+      <div class="divider" data-s="director"><span>Client Director</span></div>
+
+      <div class="form-row" data-s="director">
+        <div class="form-group">
+          <label class="field-label" for="dirName">Director Name</label>
+          <input type="text" id="dirName" placeholder="e.g. Michael Huang" />
+        </div>
+        <div class="form-group">
+          <label class="field-label" for="dirEmail">Director Email Address</label>
+          <input type="email" id="dirEmail" placeholder="director@ymllegal.com.au" />
+        </div>
+      </div>
+
+      <!-- Divider: Grounds for Dispute -->
+      <div class="divider" data-s="reasons"><span>Grounds for Dispute</span></div>
+
+      <div class="form-group" data-s="reasons">
+        <label class="field-label" style="margin-bottom:12px;">Select all that apply</label>
+
+        <div class="reasons-box">
+
+          <!-- a -->
+          <div class="reason-item">
+            <label class="reason-label" for="cb_a">
+              <input type="checkbox" id="cb_a" value="Incorrect land value" />
+              <span class="cb-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>
+              <span>Incorrect land value</span>
+            </label>
+          </div>
+
+          <!-- b -->
+          <div class="reason-item">
+            <label class="reason-label" for="cb_b">
+              <input type="checkbox" id="cb_b" value="Incorrect area or dimension errors" />
+              <span class="cb-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>
+              <span>Incorrect area or dimension errors</span>
+            </label>
+          </div>
+
+          <!-- c -->
+          <div class="reason-item">
+            <label class="reason-label" for="cb_c">
+              <input type="checkbox" id="cb_c" value="Incorrect apportionment" />
+              <span class="cb-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>
+              <span>Incorrect apportionment</span>
+            </label>
+          </div>
+
+          <!-- d -->
+          <div class="reason-item">
+            <label class="reason-label" for="cb_d">
+              <input type="checkbox" id="cb_d" value="Failure to consider property-specific constraints" />
+              <span class="cb-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>
+              <span>Failure to consider property-specific constraints, including:</span>
+            </label>
+
+            <div class="sub-panel" id="subPanel">
+              <div class="sub-panel-title">Select applicable constraints</div>
+
+              <div class="sub-item"><label class="sub-label" for="sc1"><input type="checkbox" id="sc1" value="Heritage listing or overlay"/><span class="sub-cb"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Heritage listing or overlay</label></div>
+              <div class="sub-item"><label class="sub-label" for="sc2"><input type="checkbox" id="sc2" value="Flood zone or flood-prone classification"/><span class="sub-cb"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Flood zone or flood-prone classification</label></div>
+              <div class="sub-item"><label class="sub-label" for="sc3"><input type="checkbox" id="sc3" value="Bushfire Attack Level (BAL) restrictions"/><span class="sub-cb"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Bushfire Attack Level (BAL) restrictions</label></div>
+              <div class="sub-item"><label class="sub-label" for="sc4"><input type="checkbox" id="sc4" value="Easements or rights of way"/><span class="sub-cb"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Easements or rights of way</label></div>
+              <div class="sub-item"><label class="sub-label" for="sc5"><input type="checkbox" id="sc5" value="Environmental or conservation overlay"/><span class="sub-cb"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Environmental or conservation overlay</label></div>
+              <div class="sub-item"><label class="sub-label" for="sc6"><input type="checkbox" id="sc6" value="Zoning or planning restrictions"/><span class="sub-cb"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Zoning or planning restrictions</label></div>
+              <div class="sub-item"><label class="sub-label" for="sc7"><input type="checkbox" id="sc7" value="Access restrictions or landlocked status"/><span class="sub-cb"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Access restrictions or landlocked status</label></div>
+              <div class="sub-item"><label class="sub-label" for="sc8"><input type="checkbox" id="sc8" value="Contamination or remediation requirements"/><span class="sub-cb"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Contamination or remediation requirements</label></div>
+            </div>
+          </div>
+
+        </div><!-- /reasons-box -->
+
+        <!-- Additional notes -->
+        <label class="field-label" for="addNotes" style="margin-bottom:8px;">
+          Additional Notes
+          <span style="color:var(--muted);font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0;font-size:12px;font-weight:300;margin-left:6px;">(optional)</span>
+        </label>
+        <textarea id="addNotes" placeholder="Provide any further context or supporting details about your dispute…"></textarea>
+      </div>
+
+      <button class="submit-btn" id="submitBtn" disabled>
+        <div class="btn-content">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Submit Dispute Application
+        </div>
+      </button>
+
+      <!-- SUCCESS PANEL -->
+      <div class="success-panel" id="successPanel">
+        <div class="success-ring">
+          <svg viewBox="0 0 80 80">
+            <circle class="ring-bg" cx="40" cy="40" r="35"/>
+            <circle class="ring-circle" cx="40" cy="40" r="35"/>
+            <polyline class="check-line" points="25,40 35,52 55,30"/>
+          </svg>
+        </div>
+
+        <div class="success-title">Document Received</div>
+        <p class="success-msg">
+          Your land tax bill has been <strong>successfully received</strong> and is currently being <strong>analysed by our team</strong>. A confirmation has been dispatched to your email address.
+        </p>
+
+        <div class="ref-box">
+          <div>
+            <div class="ref-label">Reference Number</div>
+            <div class="ref-number" id="refNumber">LTD-2026-00000</div>
+          </div>
+          <div>
+            <div class="ref-label">Estimated Response</div>
+            <div class="ref-number" style="color:var(--gold-light);font-size:13px;">5 Business Days</div>
+          </div>
+        </div>
+
+        <div class="submitted-reasons">
+          <div class="sr-title">Grounds Submitted</div>
+          <ul id="reasonsList"></ul>
+        </div>
+
+        <div class="email-status" id="emailStatus">📧 Sending confirmation email…</div>
+
+        <!-- Director Contact Box -->
+        <div class="director-contact-box" id="directorContactBox">
+          <div class="dc-title">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Client Director Contact
+          </div>
+
+          <div class="dc-row">
+            <div class="dc-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div>
+              <div class="dc-label">Director Name</div>
+              <div class="dc-value" id="displayDirName">—</div>
+            </div>
+          </div>
+
+          <div class="dc-row">
+            <div class="dc-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+            <div>
+              <div class="dc-label">Director Email ($DirEmailAddress$)</div>
+              <div class="dc-value" id="displayDirEmail">—</div>
+            </div>
+          </div>
+
+          <!-- Simple mailto link -->
+          <div class="outlook-btn-wrap">
+            <div class="dc-label" style="margin-bottom:4px;">Send Email</div>
+            <a id="outlookLink" class="simple-mailto" href="#">—</a>
+          </div>
+        </div>
+          <div class="status-pill"><span class="dot"></span>Document Received</div>
+          <div class="status-pill"><span class="dot"></span>Under Analysis</div>
+          <div class="status-pill"><span class="dot"></span>Awaiting Review</div>
+        </div>
+
+        <button class="new-btn" id="newBtn">Submit Another Application</button>
+      </div>
+
+    </div><!-- /card -->
+  </main>
+
+  <footer>© 2026 YML Legal · Land Tax Dispute Portal · All submissions are encrypted and confidential</footer>
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════════════════
+  //  EMAILJS CONFIGURATION
+  //  1. Sign up free at https://www.emailjs.com
+  //  2. Create a Service (Gmail / Outlook / SMTP) → copy Service ID
+  //  3. Create an Email Template with variables:
+  //     {{to_name}}, {{to_email}}, {{ref_number}}, {{prop_address}},
+  //     {{assess_year}}, {{dispute_grounds}}, {{additional_notes}},
+  //     {{file_name}}, {{submission_date}}
+  //  4. Copy your Public Key from Account → API Keys
+  // ═══════════════════════════════════════════════════════════
+  const EMAILJS_PUBLIC_KEY  = 'j6dGoYZLXuryAmBzN';   // ← replace
+  const EMAILJS_SERVICE_ID  = 'service_0vaesgo';   // ← replace
+  const EMAILJS_TEMPLATE_ID = 'template_fu8h1mv';  // ← replace
+
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+  // DOM refs
+  const fileInput     = document.getElementById('fileInput');
+  const dropzone      = document.getElementById('dropzone');
+  const filePreview   = document.getElementById('filePreview');
+  const fileNameEl    = document.getElementById('fileName');
+  const fileMetaEl    = document.getElementById('fileMeta');
+  const removeBtn     = document.getElementById('removeBtn');
+  const submitBtn     = document.getElementById('submitBtn');
+  const successPanel  = document.getElementById('successPanel');
+  const newBtn        = document.getElementById('newBtn');
+  const refNumberEl   = document.getElementById('refNumber');
+  const emailStatusEl = document.getElementById('emailStatus');
+  const cb_d          = document.getElementById('cb_d');
+  const subPanel      = document.getElementById('subPanel');
+  const reasonsList   = document.getElementById('reasonsList');
+  const outlookLink   = document.getElementById('outlookLink');
+  const displayDirName  = document.getElementById('displayDirName');
+  const displayDirEmail = document.getElementById('displayDirEmail');
+
+  let selectedFile = null;
+
+  // Utils
+  const fmtBytes = b => b < 1024 ? b + ' B' : b < 1048576 ? (b/1024).toFixed(1) + ' KB' : (b/1048576).toFixed(2) + ' MB';
+  const genRef   = () => `LTD-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+
+  // Toggle sub-panel when checkbox d changes
+  cb_d.addEventListener('change', () => subPanel.classList.toggle('open', cb_d.checked));
+
+  // ── File handling ──
+  function setFile(file) {
+    if (!file || file.type !== 'application/pdf') { alert('Please upload a PDF file.'); return; }
+    selectedFile = file;
+    fileNameEl.textContent = file.name;
+    fileMetaEl.textContent = fmtBytes(file.size) + ' · PDF';
+    filePreview.classList.add('visible');
+    // Trigger download to local Downloads folder
+    downloadFile(file);
+    checkReady();
+  }
+
+  function downloadFile(file) {
+    const url = URL.createObjectURL(file);
+    const a   = Object.assign(document.createElement('a'), { href: url, download: file.name });
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+
+  function clearFile() {
+    selectedFile = null;
+    fileInput.value = '';
+    filePreview.classList.remove('visible');
+    checkReady();
+  }
+
+  function checkReady() { submitBtn.disabled = !selectedFile; }
+
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) setFile(e.target.files[0]); });
+  removeBtn.addEventListener('click', clearFile);
+  dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault(); dropzone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+  });
+
+  // ── Collect selected reasons ──
+  function getSelectedReasons() {
+    const primary = ['cb_a','cb_b','cb_c','cb_d'];
+    const result  = [];
+    primary.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el.checked) return;
+      result.push({ text: el.value, sub: false });
+      if (id === 'cb_d') {
+        subPanel.querySelectorAll('input[type="checkbox"]:checked').forEach(s => {
+          result.push({ text: s.value, sub: true });
+        });
+      }
+    });
+    return result;
+  }
+
+  // ── Submit ──
+  submitBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+
+    const reasons = getSelectedReasons();
+    if (reasons.filter(r => !r.sub).length === 0) {
+      alert('Please select at least one ground for dispute.'); return;
+    }
+
+    const name    = document.getElementById('fullName').value.trim();
+    const email   = document.getElementById('email').value.trim();
+    const address = document.getElementById('propAddress').value.trim();
+    const year    = document.getElementById('assessYear').value.trim();
+    const notes   = document.getElementById('addNotes').value.trim();
+    const dirName  = document.getElementById('dirName').value.trim();
+    const dirEmail = document.getElementById('dirEmail').value.trim();
+
+    if (!email) { alert('Please enter your email address to receive the confirmation.'); return; }
+
+    // Processing UI
+    submitBtn.disabled = true;
+    submitBtn.querySelector('.btn-content').innerHTML = `
+      <svg viewBox="0 0 24 24" style="width:16px;height:16px;animation:spin 0.8s linear infinite;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      </svg>Processing…`;
+
+    await new Promise(r => setTimeout(r, 1700));
+
+    const ref = genRef();
+    refNumberEl.textContent = ref;
+
+    // Populate director contact box
+    displayDirName.textContent  = dirName  || '(not provided)';
+    displayDirEmail.textContent = dirEmail || '(not provided)';
+
+    // Build Outlook mailto link using $DirEmailAddress$ token
+    const DirEmailAddress = dirEmail || '';
+    outlookLink.href        = DirEmailAddress ? `mailto:${DirEmailAddress}` : '#';
+    outlookLink.textContent = DirEmailAddress || '(no email provided)';
+
+    // Populate reason summary
+    reasonsList.innerHTML = '';
+    reasons.forEach(r => {
+      const li = document.createElement('li');
+      li.textContent = r.text;
+      if (r.sub) li.classList.add('sub-item-entry');
+      reasonsList.appendChild(li);
+    });
+
+    // Hide all form sections
+    document.querySelectorAll('[data-s], #dropzone, #filePreview').forEach(el => el.style.display = 'none');
+    submitBtn.style.display = 'none';
+    successPanel.classList.add('visible');
+
+    // Send email via EmailJS
+    const groundsText = reasons.map(r => (r.sub ? '  • ' : '→ ') + r.text).join('\n');
+    const submissionDate = new Date().toLocaleDateString('en-AU', { day:'numeric', month:'long', year:'numeric' });
+    const DIRECTOR_NOTIFY_EMAIL = 'arvin.bermudez@ymlgroup.com.au';
+
+    try {
+      // 1. Confirmation email to the applicant
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_name:          name || 'Applicant',
+        to_email:         email,
+        ref_number:       ref,
+        prop_address:     address || 'Not provided',
+        assess_year:      year   || 'Not provided',
+        dispute_grounds:  groundsText,
+        additional_notes: notes || 'None',
+        file_name:        selectedFile.name,
+        submission_date:  submissionDate
+      });
+
+      // 2. Notification email to the director
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_name:          'Avi Sharabi',
+        director_email:   DIRECTOR_NOTIFY_EMAIL,
+        ref_number:       ref,
+        prop_address:     address || 'Not provided',
+        assess_year:      year   || 'Not provided',
+        dispute_grounds:  groundsText,
+        additional_notes: `A new land tax dispute has been submitted with reference ${ref} for property at ${address || 'address not provided'}. Submitted by: ${name || 'Unknown'} (${email || 'no email'}). Client Director: ${dirName || 'N/A'} (${dirEmail || 'N/A'}).`,
+        file_name:        selectedFile.name,
+        submission_date:  submissionDate
+      });
+
+      emailStatusEl.textContent = `✅ Confirmation sent to ${email} · Director notified at ${DIRECTOR_NOTIFY_EMAIL}`;
+      emailStatusEl.className   = 'email-status sent';
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      emailStatusEl.textContent = `⚠️ Email not sent — please configure EmailJS keys in the script. Reference: ${ref}`;
+      emailStatusEl.className   = 'email-status failed';
+    }
+  });
+
+  // ── Reset ──
+  newBtn.addEventListener('click', () => {
+    clearFile();
+    document.querySelectorAll('[data-s], #dropzone, #filePreview').forEach(el => el.style.display = '');
+    submitBtn.style.display = '';
+    submitBtn.disabled = true;
+    submitBtn.querySelector('.btn-content').innerHTML = `
+      <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Submit Dispute Application`;
+    successPanel.classList.remove('visible');
+    subPanel.classList.remove('open');
+    ['fullName','email','propAddress','assessYear','addNotes','dirName','dirEmail'].forEach(id => document.getElementById(id).value = '');
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    emailStatusEl.textContent = '📧 Sending confirmation email…';
+    emailStatusEl.className   = 'email-status';
+  });
+</script>
+
+
+<!-- File Upload to FYI -->
+<script>
+
+
+const fileName = document.getElementById("fileName");
+const fileMeta = document.getElementById("fileMeta");
+
+
+// Show preview when file is picked
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files[0];
+  if (file) {
+    fileName.textContent = file.name;
+    fileMeta.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+    filePreview.classList.add("visible");
+  }
+});
+
+// Clear preview if remove clicked
+removeBtn.addEventListener("click", () => {
+  fileInput.value = "";
+  filePreview.classList.remove("visible");
+  fileName.textContent = "—";
+  fileMeta.textContent = "—";
+});
+
+// Submit button executes upload script
+document.getElementById("submitBtn").addEventListener("click", async () => {
+  const file = fileInput.files[0];
+  if (!file) {
+    alert("Please upload a PDF first.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("pdf", file);
+  formData.append("data", JSON.stringify({
+    fullName: document.getElementById("fullName").value,
+    email: document.getElementById("email").value,
+    propAddress: document.getElementById("propAddress").value,
+    assessYear: document.getElementById("assessYear").value,
+    dirName: document.getElementById("dirName").value,
+    dirEmail: document.getElementById("dirEmail").value,
+    reasons: Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
+                  .map(cb => cb.value),
+  }));
+
+  try {
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData
+    });
+
+    const result = await res.json();
+    console.log(result);
+
+    if (result.success) {
+      document.getElementById("successPanel").classList.add("visible");
+      document.getElementById("refNumber").textContent = result.reference;
+    } else {
+      alert("Upload failed: " + result.error);
+    }
+  } catch (err) {
+    alert("Error: " + err.message);
+  }
+});
+</script>
+
+
+
+ 
+
+</body>
+</html>
+
+</body>
+</html>
