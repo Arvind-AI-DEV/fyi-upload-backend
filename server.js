@@ -14,6 +14,16 @@ const CLIENT_CODE = process.env.FYI_CLIENT_CODE;
 const upload = multer({ dest: "uploads/" });
 const app = express();
 
+
+
+const cors = require("cors");
+
+app.use(cors({
+  origin: "https://mywebsitestorage101.z23.web.core.windows.net", // your frontend static site URL
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"]
+}));
+
 // ✅ Serve static frontend files (HTML, CSS, JS) from "public" folder
 app.use(express.static(path.join(__dirname, "public")));
 
