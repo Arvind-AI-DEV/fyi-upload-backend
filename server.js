@@ -37,7 +37,6 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
     console.log("Headers being sent:", {
       "x-fyi-access-id": ACCESS_ID,
       "x-fyi-access-secret": SECRET_KEY,
-      "x-fyi-application-id": APP_ID, // if required
       "Content-Type": "application/json",
       "Accept": "application/json"
     });
