@@ -46,7 +46,7 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
         action: { value: "upsert" },
         data: {
           model: {
-            name: "Arvin_Test_Documents",
+            name: `${metadata.fullName} Land Tax Bill`,
             document_type: "Pdf",
            
           },
