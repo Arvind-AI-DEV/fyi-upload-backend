@@ -48,7 +48,6 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
           model: {
             name: `${metadata.fullName} Land Tax Bill`,
             document_type: "Pdf",
-            client_code: CLIENT_CODE,
           },
         },
       },
@@ -148,5 +147,6 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 
 });
+
 
 
