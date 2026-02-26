@@ -19,7 +19,7 @@ const app = express();
 const cors = require("cors");
 
 app.use(cors({
-  origin: "https://mywebsitestorage101.z23.web.core.windows.net", // your frontend static site URL
+  origin: "https://mywebsitestorage101.z23.web.core.windows.net/", // your frontend static site URL
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type"]
 }));
@@ -112,4 +112,5 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
 });
