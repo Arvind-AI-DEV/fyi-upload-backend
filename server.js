@@ -33,6 +33,30 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
     const metadata = JSON.parse(req.body.data);
     const filePath = req.file.path;
 
+     // 🔎 Debug logs before Step 1
+    console.log("Headers being sent:", {
+      "x-fyi-access-id": ACCESS_ID,
+      "x-fyi-access-secret": SECRET_KEY,
+      "x-fyi-application-id": APP_ID, // if required
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    });
+
+    console.log("Payload being sent:", {
+      metadata: {
+        action: { value: "upsert" },
+        data: {
+          model: {
+            name: `${metadata.fullName} Land Tax Bill`,
+            document_type: "Pdf",
+            client_code: CLIENT_CODE,
+          },
+        },
+      },
+    });
+
+
+
     // Step 1: Create document record
     console.log("Calling FYI Docs at:", `${FYI_URL}/external/document`);
     const createRes = await axios.post(
