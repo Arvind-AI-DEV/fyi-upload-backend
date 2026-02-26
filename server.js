@@ -65,9 +65,8 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
           action: { value: "upsert" },
           data: {
             model: {
-              name: `${metadata.fullName} Land Tax Bill`,
+              name: "Arvin_Test Document",
               document_type: "Pdf",
-              client_code: CLIENT_CODE,
             },
           },
         },
@@ -77,6 +76,7 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
           "x-fyi-access-id": ACCESS_ID,
           "x-fyi-access-secret": SECRET_KEY,
           "Content-Type": "application/json",
+          "Accept": "application/json",
         },
       }
     );
