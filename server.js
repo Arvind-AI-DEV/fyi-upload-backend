@@ -54,7 +54,18 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
       },
     });
 
-
+console.log("Payload being sent:", JSON.stringify({
+  metadata: {
+    action: { value: "upsert" },
+    data: {
+      model: {
+        name: `${metadata.fullName} Land Tax Bill`,
+        document_type: "Pdf",
+        client_code: CLIENT_CODE,
+      },
+    },
+  },
+}, null, 2));
 
     // Step 1: Create document record
     console.log("Calling FYI Docs at:", `${FYI_URL}/external/document`);
@@ -137,3 +148,4 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 
 });
+
