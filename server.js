@@ -109,10 +109,7 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
 });
 
 // ✅ Start server
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
-  console.log("FYI_URL =", FYI_URL);
-  console.log("ACCESS_ID =", ACCESS_ID);
-  console.log("SECRET_KEY =", SECRET_KEY);
-  console.log("CLIENT_CODE =", CLIENT_CODE);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
